@@ -38,9 +38,9 @@ import java.util.Optional;
 @Getter
 @Setter
 public final class SelectStatement extends DMLStatement {
-    
+    // 字段
     private ProjectionsSegment projections;
-    
+    // 表
     private final Collection<TableReferenceSegment> tableReferences = new LinkedList<>();
     
     private WhereSegment where;
@@ -50,7 +50,7 @@ public final class SelectStatement extends DMLStatement {
     private OrderBySegment orderBy;
     
     private LimitSegment limit;
-    
+    // 父statement
     private SelectStatement parentStatement;
     
     private LockSegment lock;

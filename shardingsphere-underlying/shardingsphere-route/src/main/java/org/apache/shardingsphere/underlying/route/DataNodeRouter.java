@@ -94,6 +94,7 @@ public final class DataNodeRouter {
     }
     
     private RouteContext createRouteContext(final String sql, final List<Object> parameters, final boolean useCache) {
+        //解析引擎解析SQL
         SQLStatement sqlStatement = parserEngine.parse(sql, useCache);
         try {
             SQLStatementContext sqlStatementContext = SQLStatementContextFactory.newInstance(metaData.getSchema(), sql, parameters, sqlStatement);

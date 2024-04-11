@@ -47,6 +47,14 @@ public final class SQLRouteRewriteEngine {
     public Map<RouteUnit, SQLRewriteResult> rewrite(final SQLRewriteContext sqlRewriteContext, final RouteResult routeResult) {
         Map<RouteUnit, SQLRewriteResult> result = new LinkedHashMap<>(routeResult.getRouteUnits().size(), 1);
         for (RouteUnit each : routeResult.getRouteUnits()) {
+            //重写SQL+组装参数
+            //toSQL核心就是根据SQLToken将SQL拆分改写再拼装，
+            //比如select * from t_order where created_by = '123' 就会被拆分为select * from | t_order | where created_by = '123'三部分进行改写拼装。
+
+            //构造器配置parameterBuilder,判断是否是插入语句
+            //ParameterBuilder有StandardParameterBuilder和GroupedParameterBuilder两个实现。
+            //StandardParameterBuilder： 适用于非insert语句，getParameters无需分组处理直接返回即可
+            //GroupedParameterBuilder： 适用于insert语句，需要根据路由情况对参数进行分组。
             result.put(each, new SQLRewriteResult(new RouteSQLBuilder(sqlRewriteContext, each).toSQL(), getParameters(sqlRewriteContext.getParameterBuilder(), routeResult, each)));
         }
         return result;
@@ -54,12 +62,14 @@ public final class SQLRouteRewriteEngine {
     
     private List<Object> getParameters(final ParameterBuilder parameterBuilder, final RouteResult routeResult, final RouteUnit routeUnit) {
         if (parameterBuilder instanceof StandardParameterBuilder || routeResult.getOriginalDataNodes().isEmpty() || parameterBuilder.getParameters().isEmpty()) {
+            //非插入语句直接返回
             return parameterBuilder.getParameters();
         }
         List<Object> result = new LinkedList<>();
         int count = 0;
         for (Collection<DataNode> each : routeResult.getOriginalDataNodes()) {
             if (isInSameDataNode(each, routeUnit)) {
+                //插入语句参数分组构造
                 result.addAll(((GroupedParameterBuilder) parameterBuilder).getParameters(count));
             }
             count++;

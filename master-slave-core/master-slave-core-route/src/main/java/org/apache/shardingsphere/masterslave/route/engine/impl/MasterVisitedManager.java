@@ -22,6 +22,8 @@ package org.apache.shardingsphere.masterslave.route.engine.impl;
  * 
  * <p>Trace master data source visited or not in current thread.</p>
  */
+//当我们使用事务先查询再更新/插入时，第一条查询SQL并不会走主库，而是走从库
+//如果业务需要事务的第一条查询也走主库，事务查询前需要手动调用一次
 public final class MasterVisitedManager {
     
     private static final ThreadLocal<Boolean> MASTER_VISITED = ThreadLocal.withInitial(() -> false);

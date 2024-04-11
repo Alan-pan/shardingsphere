@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
  */
 @RequiredArgsConstructor
 @Getter
+//SQLToken记录了SQL中每个token（解析引擎中提过的不可再分的原子符号）的起始位置，从而方便改写引擎知道哪些位置需要改写。
 public abstract class SQLToken implements Comparable<SQLToken> {
     
     private final int startIndex;

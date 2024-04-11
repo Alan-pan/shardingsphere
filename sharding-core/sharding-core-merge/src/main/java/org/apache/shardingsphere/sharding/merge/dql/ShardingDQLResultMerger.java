@@ -60,7 +60,9 @@ public final class ShardingDQLResultMerger implements ResultMerger {
         Map<String, Integer> columnLabelIndexMap = getColumnLabelIndexMap(queryResults.get(0));
         SelectStatementContext selectStatementContext = (SelectStatementContext) sqlStatementContext;
         selectStatementContext.setIndexes(columnLabelIndexMap);
+        //分组聚合，排序，遍历
         MergedResult mergedResult = build(queryResults, selectStatementContext, columnLabelIndexMap, schemaMetaData);
+        //分页归并
         return decorate(queryResults, selectStatementContext, mergedResult);
     }
     
@@ -75,15 +77,19 @@ public final class ShardingDQLResultMerger implements ResultMerger {
     private MergedResult build(final List<QueryResult> queryResults, final SelectStatementContext selectStatementContext,
                                final Map<String, Integer> columnLabelIndexMap, final SchemaMetaData schemaMetaData) throws SQLException {
         if (isNeedProcessGroupBy(selectStatementContext)) {
+            //分组聚合归并
             return getGroupByMergedResult(queryResults, selectStatementContext, columnLabelIndexMap, schemaMetaData);
         }
         if (isNeedProcessDistinctRow(selectStatementContext)) {
             setGroupByForDistinctRow(selectStatementContext);
+            //分组聚合归并
             return getGroupByMergedResult(queryResults, selectStatementContext, columnLabelIndexMap, schemaMetaData);
         }
         if (isNeedProcessOrderBy(selectStatementContext)) {
+            //排序归并
             return new OrderByStreamMergedResult(queryResults, selectStatementContext, schemaMetaData);
         }
+        //遍历归并
         return new IteratorStreamMergedResult(queryResults);
     }
     
@@ -120,6 +126,7 @@ public final class ShardingDQLResultMerger implements ResultMerger {
             return mergedResult;
         }
         String trunkDatabaseName = DatabaseTypes.getTrunkDatabaseType(databaseType.getName()).getName();
+        //根据数据库类型分页归并
         if ("MySQL".equals(trunkDatabaseName) || "PostgreSQL".equals(trunkDatabaseName)) {
             return new LimitDecoratorMergedResult(mergedResult, paginationContext);
         }

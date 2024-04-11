@@ -28,8 +28,10 @@ import java.util.ArrayList;
 /**
  * Data source router for master-slave.
  */
+//主从路由的核心逻辑
 @RequiredArgsConstructor
-public final class MasterSlaveDataSourceRouter {
+public final class
+MasterSlaveDataSourceRouter {
     
     private final MasterSlaveRule masterSlaveRule;
     
@@ -41,14 +43,22 @@ public final class MasterSlaveDataSourceRouter {
      */
     public String route(final SQLStatement sqlStatement) {
         if (isMasterRoute(sqlStatement)) {
+            //ThreadLocal设置Master访问过
             MasterVisitedManager.setMasterVisited();
             return masterSlaveRule.getMasterDataSourceName();
         }
+        //MasterSlaveLoadBalanceAlgorithm包含轮询和随机算法
+        //轮询RoundRobinMasterSlaveLoadBalanceAlgorithm
+        //随机RandomMasterSlaveLoadBalanceAlgorithm
         return masterSlaveRule.getLoadBalanceAlgorithm().getDataSource(
                 masterSlaveRule.getName(), masterSlaveRule.getMasterDataSourceName(), new ArrayList<>(masterSlaveRule.getSlaveDataSourceNames()));
     }
     
     private boolean isMasterRoute(final SQLStatement sqlStatement) {
+        //如果 SQL 语句包含锁（例如 SELECT ... FOR UPDATE），则判定为主库路由。
+        //如果 SQL 语句不是 SELECT 类型的语句，则判定为主库路由。
+        //如果主库已经访问过（可能是之前的操作已经在主库上执行过了），则判定为主库路由。
+        //如果通过 HintManager 指定了只使用主库路由，则判定为主库路由。
         return containsLockSegment(sqlStatement) || !(sqlStatement instanceof SelectStatement) || MasterVisitedManager.isMasterVisited() || HintManager.isMasterRouteOnly();
     }
     

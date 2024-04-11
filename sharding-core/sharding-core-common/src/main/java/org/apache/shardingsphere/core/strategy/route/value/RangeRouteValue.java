@@ -33,6 +33,6 @@ public final class RangeRouteValue<T extends Comparable<?>> implements RouteValu
     private final String columnName;
     
     private final String tableName;
-    
+    //between and 大于小于等范围值的上下限
     private final Range<T> valueRange;
 }

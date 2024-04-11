@@ -92,6 +92,8 @@ public final class PreparedStatementExecutor extends AbstractStatementExecutor {
      * @return result set list
      * @throws SQLException SQL exception
      */
+    //结果集的内存合并和流式合并只在调用JDBC的executeQuery()的情况下生效
+    //如果使用execute方式进行查询，都是统一使用流式方式的查询。
     public List<QueryResult> executeQuery() throws SQLException {
         final boolean isExceptionThrown = ExecutorExceptionHandler.isExceptionThrown();
         SQLExecuteCallback<QueryResult> executeCallback = new SQLExecuteCallback<QueryResult>(getDatabaseType(), isExceptionThrown) {
@@ -108,6 +110,7 @@ public final class PreparedStatementExecutor extends AbstractStatementExecutor {
         PreparedStatement preparedStatement = (PreparedStatement) statement;
         ResultSet resultSet = preparedStatement.executeQuery();
         getResultSets().add(resultSet);
+        //executeQuery 中根据连接模式选择流式/内存
         return ConnectionMode.MEMORY_STRICTLY == connectionMode ? new StreamQueryResult(resultSet) : new MemoryQueryResult(resultSet);
     }
     

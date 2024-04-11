@@ -76,7 +76,7 @@ public final class SelectStatementContext extends CommonSQLStatementContext<Sele
     private final OrderByContext orderByContext;
     
     private final PaginationContext paginationContext;
-    
+    //虽然这里定义了containsSubquery来判断是否包含子查询，但4.1.1源码永远是返回的false
     private final boolean containsSubquery;
 
     // TODO to be remove, for test case only

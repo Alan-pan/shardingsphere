@@ -54,18 +54,25 @@ public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule
     
     @SuppressWarnings("unchecked")
     @Override
+    //decorate方法是路由引擎的核心逻辑,经过SQL校验->生成分片条件->合并分片值后得到路由结果。
     public RouteContext decorate(final RouteContext routeContext, final ShardingSphereMetaData metaData, final ShardingRule shardingRule, final ConfigurationProperties properties) {
         SQLStatementContext sqlStatementContext = routeContext.getSqlStatementContext();
         List<Object> parameters = routeContext.getParameters();
+        //ShardingStatementValidator有ShardingInsertStatementValidator和ShardingUpdateStatementValidator两种实现
+        //INSERT INTO .... ON DUPLICATE KEY UPDATE和UPDATE语法都会涉及到字段值的更新，Sharding-JDBC是不允许更新分片值的
+        //不支持对分片键更新
         ShardingStatementValidatorFactory.newInstance(
                 sqlStatementContext.getSqlStatement()).ifPresent(validator -> validator.validate(shardingRule, sqlStatementContext.getSqlStatement(), parameters));
+        //生成分片条件
         ShardingConditions shardingConditions = getShardingConditions(parameters, sqlStatementContext, metaData.getSchema(), shardingRule);
+        //判断是否需要合并分片,合并分片值,needMergeShardingValues永远false
         boolean needMergeShardingValues = isNeedMergeShardingValues(sqlStatementContext, shardingRule);
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement && needMergeShardingValues) {
             checkSubqueryShardingValues(sqlStatementContext, shardingRule, shardingConditions);
             mergeShardingConditions(shardingConditions);
         }
         ShardingRouteEngine shardingRouteEngine = ShardingRouteEngineFactory.newInstance(shardingRule, metaData, sqlStatementContext, shardingConditions, properties);
+        ///得到路由结果
         RouteResult routeResult = shardingRouteEngine.route(shardingRule);
         if (needMergeShardingValues) {
             Preconditions.checkState(1 == routeResult.getRouteUnits().size(), "Must have one sharding with subquery.");
@@ -76,15 +83,19 @@ public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule
     private ShardingConditions getShardingConditions(final List<Object> parameters, 
                                                      final SQLStatementContext sqlStatementContext, final SchemaMetaData schemaMetaData, final ShardingRule shardingRule) {
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement) {
+            //查询分片
             if (sqlStatementContext instanceof InsertStatementContext) {
                 return new ShardingConditions(new InsertClauseShardingConditionEngine(shardingRule).createShardingConditions((InsertStatementContext) sqlStatementContext, parameters));
             }
+            //增删改分片
             return new ShardingConditions(new WhereClauseShardingConditionEngine(shardingRule, schemaMetaData).createShardingConditions(sqlStatementContext, parameters));
         }
         return new ShardingConditions(Collections.emptyList());
     }
     
     private boolean isNeedMergeShardingValues(final SQLStatementContext sqlStatementContext, final ShardingRule shardingRule) {
+        //selectSQL并且是否包含子查询,检查是否存在进行了分片的逻辑表名。
+        //isContainsSubquery永远false,则isNeedMergeShardingValues也是false,即不会合并分片条件。
         return sqlStatementContext instanceof SelectStatementContext && ((SelectStatementContext) sqlStatementContext).isContainsSubquery() 
                 && !shardingRule.getShardingLogicTableNames(sqlStatementContext.getTablesContext().getTableNames()).isEmpty();
     }

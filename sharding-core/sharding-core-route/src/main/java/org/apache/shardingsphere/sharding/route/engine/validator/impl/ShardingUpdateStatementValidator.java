@@ -47,12 +47,15 @@ public final class ShardingUpdateStatementValidator implements ShardingStatement
         for (AssignmentSegment each : sqlStatement.getSetAssignment().getAssignments()) {
             String shardingColumn = each.getColumn().getIdentifier().getValue();
             if (shardingRule.isShardingColumn(shardingColumn, tableName)) {
+                //获取set分片键值
                 Optional<Object> shardingColumnSetAssignmentValue = getShardingColumnSetAssignmentValue(each, parameters);
                 Optional<Object> shardingValue = Optional.empty();
                 Optional<WhereSegment> whereSegmentOptional = sqlStatement.getWhere();
+                //获取where的分片键值
                 if (whereSegmentOptional.isPresent()) {
                     shardingValue = getShardingValue(whereSegmentOptional.get(), parameters, shardingColumn);
                 }
+                //如果set的分片键值=where的分片键值,则continue
                 if (shardingColumnSetAssignmentValue.isPresent() && shardingValue.isPresent() && shardingColumnSetAssignmentValue.get().equals(shardingValue.get())) {
                     continue;
                 }

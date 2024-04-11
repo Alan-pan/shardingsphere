@@ -20,6 +20,7 @@ package org.apache.shardingsphere.sharding.route.engine.condition;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import org.apache.shardingsphere.core.strategy.route.value.RouteValue;
 
 import java.util.List;
 
@@ -30,7 +31,9 @@ import java.util.List;
 @Getter
 @ToString
 public final class ShardingConditions {
-    
+    //ShardingCondition包含List<RouteValue>
+    //RouteValue是一个接口，有ListRouteValue和RangeRouteValue两种实现
+
     private final List<ShardingCondition> conditions;
     
     /**

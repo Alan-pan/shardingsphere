@@ -76,7 +76,16 @@ public final class SQLParserEngine {
                 return cachedSQLStatement.get();
             }
         }
+        //根据数据库类型和sql生成解析树
         ParseTree parseTree = new SQLParserExecutor(databaseTypeName, sql).execute().getRootNode();
+        //ParseTreeVisitor的visit方法对解析树进行处理得到SQLStatement
+        //goto SelectStatement SQLStatement还会被进一步转换成SQLStatementContext
+        //visit方法调用MySQLStatementParser.accept
+        //继续调用为MySQLDMLVisitor#visitSelectClause
+        //public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+        //    if ( visitor instanceof MySQLStatementVisitor ) return ((MySQLStatementVisitor<? extends T>)visitor).visitSelectClause(this);
+        //    else return visitor.visitChildren(this);
+        //}
         SQLStatement result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass())).visit(parseTree);
         if (useCache) {
             cache.put(sql, result);

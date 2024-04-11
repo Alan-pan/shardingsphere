@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @ToString
 public final class RouteUnit {
-    
+    //表示数据源的映射关系，包括逻辑数据源名称和实际数据源名称。
     private final RouteMapper dataSourceMapper;
     
     private final Collection<RouteMapper> tableMappers;

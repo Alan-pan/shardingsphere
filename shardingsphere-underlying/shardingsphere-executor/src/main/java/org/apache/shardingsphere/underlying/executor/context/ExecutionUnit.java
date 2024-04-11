@@ -30,8 +30,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public final class ExecutionUnit {
-    
+    //数据库
     private final String dataSourceName;
-    
+    //改写String sql,List<Object> parameters;
     private final SQLUnit sqlUnit;
 }

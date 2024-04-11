@@ -34,7 +34,7 @@ public final class ListRouteValue<T extends Comparable<?>> implements RouteValue
     private final String columnName;
     
     private final String tableName;
-    
+    //in或=条件对应的值
     private final Collection<T> values;
     
     @Override

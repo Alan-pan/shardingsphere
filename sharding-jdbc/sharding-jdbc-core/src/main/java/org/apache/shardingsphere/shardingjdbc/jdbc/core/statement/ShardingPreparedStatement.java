@@ -140,6 +140,7 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
     public boolean execute() throws SQLException {
         try {
             clearPrevious();
+            //解析+路由+重写 内部调用BasePrepareEngine#prepare方法
             prepare();
             initPreparedStatementExecutor();
             return preparedStatementExecutor.execute();
@@ -155,6 +156,7 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
         }
         if (executionContext.getSqlStatementContext() instanceof SelectStatementContext || executionContext.getSqlStatementContext().getSqlStatement() instanceof DALStatement) {
             List<ResultSet> resultSets = getResultSets();
+            //结果归并
             MergedResult mergedResult = mergeQuery(getQueryResults(resultSets));
             currentResultSet = new ShardingResultSet(resultSets, mergedResult, this, executionContext);
         }
@@ -168,7 +170,7 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
         }
         return result;
     }
-    
+    //execute 单独调用getResultSet中只会使用流式合并
     private List<QueryResult> getQueryResults(final List<ResultSet> resultSets) throws SQLException {
         List<QueryResult> result = new ArrayList<>(resultSets.size());
         for (ResultSet each : resultSets) {
@@ -180,7 +182,9 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
     }
     
     private void prepare() {
+        //BasePrepareEngine执行引擎执行
         executionContext = prepareEngine.prepare(sql, getParameters());
+        //如果SQL是Insert类型,获取getGeneratedKeyContext
         findGeneratedKey().ifPresent(generatedKey -> generatedValues.add(generatedKey.getGeneratedValues().getLast()));
     }
     

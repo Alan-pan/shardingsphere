@@ -65,7 +65,9 @@ public final class SQLRewriteEntry {
      */
     public SQLRewriteContext createSQLRewriteContext(final String sql, final List<Object> parameters, final SQLStatementContext sqlStatementContext, final RouteContext routeContext) {
         SQLRewriteContext result = new SQLRewriteContext(schemaMetaData, sqlStatementContext, sql, parameters);
+        //sql参数重写
         decorate(decorators, result, routeContext);
+        //生成SQLToken
         result.generateSQLTokens();
         return result;
     }

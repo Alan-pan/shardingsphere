@@ -120,6 +120,7 @@ public final class JDBCBackendDataSource implements BackendDataSource, AutoClose
         if (ConnectionMode.CONNECTION_STRICTLY == connectionMode) {
             return createConnections(transactionType, dataSourceName, dataSource, connectionSize);
         }
+        //内存限制模式加锁 一次性获取所有的连接
         synchronized (dataSource) {
             return createConnections(transactionType, dataSourceName, dataSource, connectionSize);
         }

@@ -72,6 +72,7 @@ public final class NewInstanceServiceLoader {
         if (null == SERVICE_MAP.get(service)) {
             return result;
         }
+        //SPI同类型下所有加载类返回,使用LinkedList返回
         for (Class<?> each : SERVICE_MAP.get(service)) {
             result.add((T) each.newInstance());
         }

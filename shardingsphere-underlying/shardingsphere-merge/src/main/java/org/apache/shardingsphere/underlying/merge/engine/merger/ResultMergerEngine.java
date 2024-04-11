@@ -28,6 +28,7 @@ import org.apache.shardingsphere.underlying.merge.engine.ResultProcessEngine;
  *
  * @param <T> type of rule
  */
+//ResultMergerEngine只有一个实现类ShardingResultMergerEngine
 public interface ResultMergerEngine<T extends BaseRule> extends ResultProcessEngine<T> {
     
     /**

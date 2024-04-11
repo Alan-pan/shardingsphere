@@ -56,8 +56,10 @@ public final class SQLExecutePrepareTemplate {
     
     private Collection<InputGroup<StatementExecuteUnit>> getSynchronizedExecuteUnitGroups(
             final Collection<ExecutionUnit> executionUnits, final SQLExecutePrepareCallback callback) throws SQLException {
+        //根据数据源将SQLUnit分组 key=dataSourceName
         Map<String, List<SQLUnit>> sqlUnitGroups = getSQLUnitGroups(executionUnits);
         Collection<InputGroup<StatementExecuteUnit>> result = new LinkedList<>();
+        //创建sql执行组
         for (Entry<String, List<SQLUnit>> entry : sqlUnitGroups.entrySet()) {
             result.addAll(getSQLExecuteGroups(entry.getKey(), entry.getValue(), callback));
         }
@@ -78,12 +80,19 @@ public final class SQLExecutePrepareTemplate {
     private List<InputGroup<StatementExecuteUnit>> getSQLExecuteGroups(final String dataSourceName,
                                                                        final List<SQLUnit> sqlUnits, final SQLExecutePrepareCallback callback) throws SQLException {
         List<InputGroup<StatementExecuteUnit>> result = new LinkedList<>();
+        //每个连接需要执行的最大sql数量
         int desiredPartitionSize = Math.max(0 == sqlUnits.size() % maxConnectionsSizePerQuery ? sqlUnits.size() / maxConnectionsSizePerQuery : sqlUnits.size() / maxConnectionsSizePerQuery + 1, 1);
+        //分组，每组对应一条数据库连接
         List<List<SQLUnit>> sqlUnitPartitions = Lists.partition(sqlUnits, desiredPartitionSize);
+        //选择连接模式 连接限制/内存限制
+        //maxConnectionsSizePerQuery默认值为1，所以当一条SQL需要路由至多张表时（即有多个SQLUnit）会采用连接限制，当路由至单表时是内存限制模式。
+        //org.apache.shardingsphere.shardingproxy.backend.communication.jdbc.datasource.JDBCBackendDataSource#getConnections 115
         ConnectionMode connectionMode = maxConnectionsSizePerQuery < sqlUnits.size() ? ConnectionMode.CONNECTION_STRICTLY : ConnectionMode.MEMORY_STRICTLY;
+        //创建连接
         List<Connection> connections = callback.getConnections(connectionMode, dataSourceName, sqlUnitPartitions.size());
         int count = 0;
         for (List<SQLUnit> each : sqlUnitPartitions) {
+            //绑定连接和SQLUnit 创建StatementExecuteUnit
             result.add(getSQLExecuteGroup(connectionMode, connections.get(count++), dataSourceName, each, callback));
         }
         return result;

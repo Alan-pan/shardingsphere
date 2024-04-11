@@ -39,6 +39,8 @@ import java.util.TreeSet;
 /**
  * Standard sharding strategy.
  */
+//行表达式分片策略,使用Groovy的表达式
+//对于只有一个分片键的使用=和IN进行分片的SQL，可以使用行表达式代替编码方式配置
 public final class InlineShardingStrategy implements ShardingStrategy {
     
     private final String shardingColumn;
@@ -56,6 +58,8 @@ public final class InlineShardingStrategy implements ShardingStrategy {
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ConfigurationProperties properties) {
         RouteValue shardingValue = shardingValues.iterator().next();
+        //ALLOW_RANGE_QUERY_WITH_INLINE_SHARDING设置为true，支持行表达式范围查询RangeRouteValue
+        // 直接返回所有availableTargetNames物理表，而不是根据RangeRouteValue计算
         if (properties.<Boolean>getValue(ConfigurationPropertyKey.ALLOW_RANGE_QUERY_WITH_INLINE_SHARDING) && shardingValue instanceof RangeRouteValue) {
             return availableTargetNames;
         }

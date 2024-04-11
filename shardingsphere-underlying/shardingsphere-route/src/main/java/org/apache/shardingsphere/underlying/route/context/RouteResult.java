@@ -35,10 +35,12 @@ import java.util.stream.Collectors;
  * Route result.
  */
 @Getter
+//维护了一条SQL需要往哪些库哪些表执行的关系
 public final class RouteResult {
-    
+    //DataNode是实际的数据源节点，包括数据源名称和实际的物理表名=>dataSourceName.tableName
     private final Collection<Collection<DataNode>> originalDataNodes = new LinkedList<>();
-    
+    //RouteUnit则数据源的映射关系，包括逻辑数据源名称和实际数据源名称。
+    //逻辑表/库与物理表/库的映射关系
     private final Collection<RouteUnit> routeUnits = new LinkedHashSet<>();
     
     /**

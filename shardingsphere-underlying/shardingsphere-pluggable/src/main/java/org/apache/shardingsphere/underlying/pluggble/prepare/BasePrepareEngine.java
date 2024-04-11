@@ -80,8 +80,10 @@ public abstract class BasePrepareEngine {
      */
     public ExecutionContext prepare(final String sql, final List<Object> parameters) {
         List<Object> clonedParameters = cloneParameters(parameters);
+        //解析+路由(executeRoute内部先进行解析再执行路由)
         RouteContext routeContext = executeRoute(sql, clonedParameters);
         ExecutionContext result = new ExecutionContext(routeContext.getSqlStatementContext());
+        //改写
         result.getExecutionUnits().addAll(executeRewrite(sql, clonedParameters, routeContext));
         if (properties.<Boolean>getValue(ConfigurationPropertyKey.SQL_SHOW)) {
             SQLLogger.logSQL(sql, properties.<Boolean>getValue(ConfigurationPropertyKey.SQL_SIMPLE), result.getSqlStatementContext(), result.getExecutionUnits());
@@ -115,18 +117,28 @@ public abstract class BasePrepareEngine {
     }
     
     protected abstract RouteContext route(DataNodeRouter dataNodeRouter, String sql, List<Object> parameters);
-    
+    //改写SQL从逻辑表到物理表
     private Collection<ExecutionUnit> executeRewrite(final String sql, final List<Object> parameters, final RouteContext routeContext) {
+        //注册重写装饰器
         registerRewriteDecorator();
+        //创建 SQLRewriteContext
+        //完成了两件事，一个是对SQL参数进行了重写，一个是生成了SQLToken
         SQLRewriteContext sqlRewriteContext = rewriter.createSQLRewriteContext(sql, parameters, routeContext.getSqlStatementContext(), routeContext);
+        //重写
+        //创建完SQLRewriteContext后就对整条SQL进行重写和组装参数，可以看出每个RouteUnit都会重写SQL并获取自己对应的参数。
+        //是否有路由重写?
         return routeContext.getRouteResult().getRouteUnits().isEmpty() ? rewrite(sqlRewriteContext) : rewrite(routeContext, sqlRewriteContext);
     }
     
     private void registerRewriteDecorator() {
         for (Class<? extends SQLRewriteContextDecorator> each : OrderedRegistry.getRegisteredClasses(SQLRewriteContextDecorator.class)) {
+            //反射实例化
             SQLRewriteContextDecorator rewriteContextDecorator = createRewriteDecorator(each);
             Class<?> ruleClass = (Class<?>) rewriteContextDecorator.getType();
             // FIXME rule.getClass().getSuperclass() == ruleClass for orchestration, should decouple extend between orchestration rule and sharding rule
+            //Collection<BaseRule> rules,其中ShardingRule implements BaseRule
+            //SQLRewriteContextDecorator三个子类getType方法返回ShardingRule.class
+            //如果匹配rewriter.registerDecorator,在SQLRewriteEntry.decorators放入对应的实例对象
             rules.stream().filter(rule -> rule.getClass() == ruleClass || rule.getClass().getSuperclass() == ruleClass).collect(Collectors.toList())
                     .forEach(rule -> rewriter.registerDecorator(rule, rewriteContextDecorator));
         }
