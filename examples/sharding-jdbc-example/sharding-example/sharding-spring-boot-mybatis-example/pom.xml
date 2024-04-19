@@ -48,5 +48,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.shardingsphere.example</groupId>
+            <artifactId>example-api</artifactId>
+            <version>4.1.1</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>
