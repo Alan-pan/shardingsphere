@@ -24,6 +24,7 @@ import lombok.Getter;
 import org.apache.shardingsphere.masterslave.route.engine.impl.MasterVisitedManager;
 import org.apache.shardingsphere.shardingjdbc.jdbc.adapter.executor.ForceExecuteTemplate;
 import org.apache.shardingsphere.shardingjdbc.jdbc.unsupported.AbstractUnsupportedOperationConnection;
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.transaction.core.TransactionTypeHolder;
 import org.apache.shardingsphere.underlying.common.hook.RootInvokeHook;
 import org.apache.shardingsphere.underlying.common.hook.SPIRootInvokeHook;
@@ -182,6 +183,8 @@ public abstract class AbstractConnectionAdapter extends AbstractUnsupportedOpera
         closed = true;
         MasterVisitedManager.clear();
         TransactionTypeHolder.clear();
+        //定制开发
+        RuleContextManager.clear();
         int connectionSize = cachedConnections.size();
         try {
             forceExecuteTemplateForClose.execute(cachedConnections.entries(), cachedConnections -> cachedConnections.getValue().close());

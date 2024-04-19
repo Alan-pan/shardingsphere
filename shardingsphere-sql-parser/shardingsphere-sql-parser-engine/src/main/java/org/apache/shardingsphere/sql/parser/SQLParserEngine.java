@@ -26,6 +26,7 @@ import org.apache.shardingsphere.sql.parser.hook.ParsingHook;
 import org.apache.shardingsphere.sql.parser.hook.SPIParsingHook;
 import org.apache.shardingsphere.sql.parser.core.visitor.VisitorRule;
 import org.apache.shardingsphere.sql.parser.sql.statement.SQLStatement;
+import org.apache.shardingsphere.sql.parser.sql.statement.SkipShardingStatement;
 
 import java.util.Optional;
 
@@ -78,6 +79,15 @@ public final class SQLParserEngine {
         }
         //根据数据库类型和sql生成解析树
         ParseTree parseTree = new SQLParserExecutor(databaseTypeName, sql).execute().getRootNode();
+        //跳过Sharding语法限制-跳过分片,并且不为SELECT查询,设置主库路由
+        SQLStatement result ;
+        if(RuleContextManager.isSkipSharding()&&!VisitorRule.SELECT.equals(VisitorRule.valueOf(parseTree.getClass()))){
+            RuleContextManager.setMasterRoute(true);
+            //单独构造一个SkipShardingStatement的目的是为了能利用解析引擎中的缓存，缓存中不能放入null值。
+            result = new SkipShardingStatement();
+        }else {
+            result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass())).visit(parseTree);
+        }
         //SQL=SELECT * FROM t_order_item WHERE item_id IS NOT NULL AND item_id NOT BETWEEN 100000 AND 100001 ORDER BY item_id
         //ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass()))得到MySQLDMLVisitor
         //parseTree=org.apache.shardingsphere.sql.parser.autogen.MySQLStatementParser.SelectContext
@@ -93,7 +103,7 @@ public final class SQLParserEngine {
         //执行...
         //不停向下调用各个解析类的accept然后再去调用
         //MySQLDMLVisitor.visitSelect/visitUnionClause/visitSelectClause
-        SQLStatement result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass())).visit(parseTree);
+        //result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass())).visit(parseTree);
         if (useCache) {
             cache.put(sql, result);
         }

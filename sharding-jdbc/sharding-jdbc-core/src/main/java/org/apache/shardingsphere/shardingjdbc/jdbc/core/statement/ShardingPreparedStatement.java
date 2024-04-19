@@ -20,6 +20,7 @@ package org.apache.shardingsphere.shardingjdbc.jdbc.core.statement;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shardingsphere.sharding.execute.sql.execute.result.StreamQueryResult;
 import org.apache.shardingsphere.shardingjdbc.executor.PreparedStatementExecutor;
 import org.apache.shardingsphere.shardingjdbc.executor.batch.BatchPreparedStatementExecutor;
@@ -115,6 +116,14 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
             clearPrevious();
             prepare();
             initPreparedStatementExecutor();
+            //跳过Sharding语法限制
+            List<QueryResult> queryResults = preparedStatementExecutor.executeQuery();
+            List<ResultSet> resultSets = preparedStatementExecutor.getResultSets();
+            // 定制开发，不分片跳过合并
+            if(executionContext.isSkipShardingScenarioFlag()){
+                return CollectionUtils.isNotEmpty(resultSets) ? resultSets.get(0) : null;
+            }
+
             MergedResult mergedResult = mergeQuery(preparedStatementExecutor.executeQuery());
             result = new ShardingResultSet(preparedStatementExecutor.getResultSets(), mergedResult, this, executionContext);
         } finally {
@@ -154,8 +163,15 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
         if (null != currentResultSet) {
             return currentResultSet;
         }
+
+        // 定制开发，不分片跳过合并
+        List<ResultSet> resultSets = getResultSets();
+        if(executionContext.isSkipShardingScenarioFlag()){
+            return CollectionUtils.isNotEmpty(resultSets) ? resultSets.get(0) : null;
+        }
+
         if (executionContext.getSqlStatementContext() instanceof SelectStatementContext || executionContext.getSqlStatementContext().getSqlStatement() instanceof DALStatement) {
-            List<ResultSet> resultSets = getResultSets();
+//            List<ResultSet> resultSets = getResultSets();
             //结果归并
             MergedResult mergedResult = mergeQuery(getQueryResults(resultSets));
             currentResultSet = new ShardingResultSet(resultSets, mergedResult, this, executionContext);
@@ -295,6 +311,10 @@ public final class ShardingPreparedStatement extends AbstractShardingPreparedSta
     
     @Override
     public boolean isAccumulate() {
+        //跳过Sharding语法限制-不分片跳过计算
+        if(executionContext.isSkipShardingScenarioFlag()){
+            return false;
+        }
         return !connection.getRuntimeContext().getRule().isAllBroadcastTables(executionContext.getSqlStatementContext().getTablesContext().getTableNames());
     }
     

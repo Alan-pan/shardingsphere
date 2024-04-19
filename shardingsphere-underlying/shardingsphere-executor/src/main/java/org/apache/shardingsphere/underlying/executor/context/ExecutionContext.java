@@ -34,4 +34,19 @@ public class ExecutionContext {
     private final SQLStatementContext sqlStatementContext;
     
     private final Collection<ExecutionUnit> executionUnits = new LinkedHashSet<>();
+
+    public ExecutionContext(SQLStatementContext sqlStatementContext, boolean skipShardingScenarioFlag) {
+        this.sqlStatementContext = sqlStatementContext;
+        this.skipShardingScenarioFlag = skipShardingScenarioFlag;
+    }
+
+    private boolean skipShardingScenarioFlag;
+
+    public boolean isSkipShardingScenarioFlag() {
+        return skipShardingScenarioFlag;
+    }
+
+    public void setSkipShardingScenarioFlag(boolean skipShardingScenarioFlag) {
+        this.skipShardingScenarioFlag = skipShardingScenarioFlag;
+    }
 }

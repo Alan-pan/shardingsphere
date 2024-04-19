@@ -32,6 +32,7 @@ import org.apache.shardingsphere.sharding.route.engine.condition.engine.WhereCla
 import org.apache.shardingsphere.sharding.route.engine.type.ShardingRouteEngine;
 import org.apache.shardingsphere.sharding.route.engine.type.ShardingRouteEngineFactory;
 import org.apache.shardingsphere.sharding.route.engine.validator.ShardingStatementValidatorFactory;
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.sql.parser.binder.metadata.schema.SchemaMetaData;
 import org.apache.shardingsphere.sql.parser.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.sql.parser.binder.statement.dml.InsertStatementContext;
@@ -56,6 +57,10 @@ public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule
     @Override
     //decorate方法是路由引擎的核心逻辑,经过SQL校验->生成分片条件->合并分片值后得到路由结果。
     public RouteContext decorate(final RouteContext routeContext, final ShardingSphereMetaData metaData, final ShardingRule shardingRule, final ConfigurationProperties properties) {
+        //跳过Sharding语法限制-跳过sharding路由
+        if(RuleContextManager.isSkipSharding()){
+            return routeContext;
+        }
         SQLStatementContext sqlStatementContext = routeContext.getSqlStatementContext();
         List<Object> parameters = routeContext.getParameters();
         //ShardingStatementValidator有ShardingInsertStatementValidator和ShardingUpdateStatementValidator两种实现

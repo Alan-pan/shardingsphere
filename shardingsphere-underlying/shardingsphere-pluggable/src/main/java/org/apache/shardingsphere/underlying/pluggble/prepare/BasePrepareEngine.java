@@ -18,6 +18,8 @@
 package org.apache.shardingsphere.underlying.pluggble.prepare;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.shardingsphere.spi.order.OrderedRegistry;
 import org.apache.shardingsphere.sql.parser.SQLParserEngine;
 import org.apache.shardingsphere.underlying.common.config.properties.ConfigurationProperties;
@@ -38,18 +40,17 @@ import org.apache.shardingsphere.underlying.rewrite.engine.SQLRouteRewriteEngine
 import org.apache.shardingsphere.underlying.route.DataNodeRouter;
 import org.apache.shardingsphere.underlying.route.context.RouteContext;
 import org.apache.shardingsphere.underlying.route.context.RouteUnit;
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.underlying.route.decorator.RouteDecorator;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
  * Base prepare engine.
  */
+@Slf4j(topic = "ShardingSphere-BasePrepareEngine-UserDefined")
 @RequiredArgsConstructor
 public abstract class BasePrepareEngine {
     
@@ -80,15 +81,58 @@ public abstract class BasePrepareEngine {
      */
     public ExecutionContext prepare(final String sql, final List<Object> parameters) {
         List<Object> clonedParameters = cloneParameters(parameters);
+        //跳过Sharding语法限制-判断是否可以跳过sharding,构造RuleContextManager的值
+        buildSkipContext(sql);
         //解析+路由(executeRoute内部先进行解析再执行路由)
         RouteContext routeContext = executeRoute(sql, clonedParameters);
         ExecutionContext result = new ExecutionContext(routeContext.getSqlStatementContext());
-        //改写
-        result.getExecutionUnits().addAll(executeRewrite(sql, clonedParameters, routeContext));
+        //跳过Sharding语法限制-sql最后的路由结果一定只有一个库
+        if(RuleContextManager.isSkipSharding()) {
+            log.info("可以跳过sharding的场景 {}", sql);
+            if (!Objects.isNull(routeContext.getRouteResult())) {
+                //getAllInstanceDataSourceNames随机获取一个数据源返回
+                Collection<String> allInstanceDataSourceNames = this.metaData.getDataSources().getAllInstanceDataSourceNames();
+                int routeUnitsSize = routeContext.getRouteResult().getRouteUnits().size();
+                /*
+                 * 1. 没有读写分离的情况下  跳过sharding路由会导致routeUnitsSize为0 此时需要判断数据源数量是否为1
+                 * 2. 读写分离情况下 只会路由至具体的主库或从库 routeUnitsSize数量应该为1
+                 */
+                if (!(routeUnitsSize == 0 && allInstanceDataSourceNames.size() == 1) || routeUnitsSize > 1) {
+                    throw new ShardingSphereException("可以跳过sharding,但是路由结果不唯一,SQL= %s ,routeUnits= %s ", sql, routeContext.getRouteResult().getRouteUnits());
+                }
+                Collection<String> actualDataSourceNames = routeContext.getRouteResult().getActualDataSourceNames();
+                // 手动创建执行单元
+                String datasourceName = CollectionUtils.isEmpty(actualDataSourceNames) ? allInstanceDataSourceNames.iterator().next() : actualDataSourceNames.iterator().next();
+                ExecutionUnit executionUnit = new ExecutionUnit(datasourceName, new SQLUnit(sql, clonedParameters));
+                result.getExecutionUnits().add(executionUnit);
+                //标记该结果需要跳过
+                result.setSkipShardingScenarioFlag(true);
+            }
+        } else {
+            //改写
+            result.getExecutionUnits().addAll(executeRewrite(sql, clonedParameters, routeContext));
+        }
         if (properties.<Boolean>getValue(ConfigurationPropertyKey.SQL_SHOW)) {
             SQLLogger.logSQL(sql, properties.<Boolean>getValue(ConfigurationPropertyKey.SQL_SIMPLE), result.getSqlStatementContext(), result.getExecutionUnits());
         }
         return result;
+    }
+
+    //跳过Sharding语法限制-判断是否可以跳过sharding,构造RuleContextManager的值
+    private void buildSkipContext(final String sql){
+        Set<String> sqlTokenSet = new HashSet<>(Arrays.asList(sql.split("[\\s]")));
+        if (CollectionUtils.isNotEmpty(rules)) {
+            for (BaseRule baseRule : rules) {
+                //定制方法，ShardingRule实现，判断sqlTokenSet是否包含逻辑表即可
+                //主从表影响结果,先执行ShardingRule,再执行MasterSlaveRule
+                if(baseRule.hasContainShardingTable(sqlTokenSet)){
+                    RuleContextManager.setSkipSharding(false);
+                    break;
+                }else {
+                    RuleContextManager.setSkipSharding(true);
+                }
+            }
+        }
     }
     
     protected abstract List<Object> cloneParameters(List<Object> parameters);

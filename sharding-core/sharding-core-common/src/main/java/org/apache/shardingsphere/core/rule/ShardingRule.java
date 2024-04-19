@@ -36,13 +36,7 @@ import org.apache.shardingsphere.underlying.common.config.exception.ShardingSphe
 import org.apache.shardingsphere.underlying.common.rule.BaseRule;
 import org.apache.shardingsphere.underlying.common.rule.DataNode;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -439,5 +433,17 @@ public class ShardingRule implements BaseRule {
         }
         result.addAll(masterSlaveRules);
         return result;
+    }
+    //跳过Sharding语法限制
+    public Boolean hasContainShardingTable(Set<String> sqlTokenSet) {
+        //logicTableNameList通过遍历TableRule可以得到
+        //tableRules逻辑表对应的rule
+        for (TableRule tableRule : tableRules) {
+            String logicTable = tableRule.getLogicTable();
+            if (sqlTokenSet.contains(logicTable)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

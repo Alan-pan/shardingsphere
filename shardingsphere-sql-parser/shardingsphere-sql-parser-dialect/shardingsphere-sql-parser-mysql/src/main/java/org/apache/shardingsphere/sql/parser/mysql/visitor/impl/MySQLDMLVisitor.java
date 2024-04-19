@@ -17,6 +17,7 @@
 
 package org.apache.shardingsphere.sql.parser.mysql.visitor.impl;
 
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.sql.parser.api.ASTNode;
 import org.apache.shardingsphere.sql.parser.api.visitor.statement.DMLVisitor;
 import org.apache.shardingsphere.sql.parser.autogen.MySQLStatementParser;
@@ -326,6 +327,14 @@ public final class MySQLDMLVisitor extends MySQLVisitor implements DMLVisitor {
     @Override
     public ASTNode visitSelectClause(final SelectClauseContext ctx) {
         SelectStatement result = new SelectStatement();
+        //跳过Sharding语法限制-只需要判断是否有锁来决定是否路由至主库即可
+        if(RuleContextManager.isSkipSharding()){
+            if (null != ctx.lockClause()) {
+                result.setLock((LockSegment) visit(ctx.lockClause()));
+                RuleContextManager.setMasterRoute(true);
+            }
+            return result;
+        }
         result.setProjections((ProjectionsSegment) visit(ctx.projections()));
         if (null != ctx.selectSpecification()) {
             result.getProjections().setDistinctRow(isDistinct(ctx));

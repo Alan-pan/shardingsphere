@@ -18,6 +18,7 @@
 package org.apache.shardingsphere.underlying.route;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.sql.parser.SQLParserEngine;
 import org.apache.shardingsphere.sql.parser.binder.SQLStatementContextFactory;
 import org.apache.shardingsphere.sql.parser.binder.statement.CommonSQLStatementContext;
@@ -97,6 +98,10 @@ public final class DataNodeRouter {
     private RouteContext createRouteContext(final String sql, final List<Object> parameters, final boolean useCache) {
         //解析引擎解析SQL
         SQLStatement sqlStatement = parserEngine.parse(sql, useCache);
+        //跳过Sharding语法限制-如果需要跳过sharding 不进行后续的解析直接返回
+        if (RuleContextManager.isSkipSharding()) {
+            return new RouteContext(new CommonSQLStatementContext(sqlStatement), parameters, new RouteResult());
+        }
         try {
             //组装生成SQLStatementContext
             SQLStatementContext sqlStatementContext = SQLStatementContextFactory.newInstance(metaData.getSchema(), sql, parameters, sqlStatement);

@@ -19,6 +19,8 @@ package org.apache.shardingsphere.underlying.common.rule;
 
 import org.apache.shardingsphere.underlying.common.config.RuleConfiguration;
 
+import java.util.Set;
+
 /**
  * Base rule.
  */
@@ -30,4 +32,9 @@ public interface BaseRule {
      * @return rule configuration
      */
     RuleConfiguration getRuleConfiguration();
+
+     default Boolean hasContainShardingTable(Set<String> sqlTokenSet) {
+        //logicTableNameList通过遍历TableRule可以得到
+        return true;
+    }
 }
