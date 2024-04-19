@@ -44,9 +44,10 @@ import static org.junit.Assert.fail;
 @RequiredArgsConstructor
 @Slf4j
 public final class SQLParserParameterizedTest {
-    
+    //加载sharding-sql-test模块sql/supported下xml返回Map<String, SQLCase> sqlCases;
     private static final SQLCasesLoader SQL_CASES_LOADER = SQLCasesRegistry.getInstance().getSqlCasesLoader();
-    
+    //加载shardingsphere/shardingsphere-sql-parser/shardingsphere-sql-parser-test/target/test-classes/sql/文件
+    //返回Map<String, SQLParserTestCase> sqlParserTestCases;
     private static final SQLParserTestCasesRegistry SQL_PARSER_TEST_CASES_REGISTRY = SQLParserTestCasesRegistryFactory.getInstance().getRegistry();
     
     private final String sqlCaseId;
@@ -54,8 +55,11 @@ public final class SQLParserParameterizedTest {
     private final String databaseType;
     
     private final SQLCaseType sqlCaseType;
-    
+
+    //目标返回测试名称组装作为测试用例sqlCaseId (sqlCaseType) -> databaseType
+    //返回的Collection<Object[]>作为测试类循环执行测试方法,注意一定要对应入参顺序,简单案例查看MyParameterizedTest
     @Parameters(name = "{0} ({2}) -> {1}")
+//    @Parameters
     public static Collection<Object[]> getTestParameters() {
         // TODO resume me after all test cases passed 
 //        checkTestCases();

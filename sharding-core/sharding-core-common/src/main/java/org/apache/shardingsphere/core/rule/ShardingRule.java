@@ -295,6 +295,7 @@ public class ShardingRule implements BaseRule {
     }
     
     private boolean isShardingColumn(final TableRule tableRule, final String columnName) {
+        //库分片策略或者表分片策略包含该列
         return getDatabaseShardingStrategy(tableRule).getShardingColumns().contains(columnName) || getTableShardingStrategy(tableRule).getShardingColumns().contains(columnName);
     }
     

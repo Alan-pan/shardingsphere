@@ -40,8 +40,8 @@ public final class ShardingSQLRewriteContextDecorator implements SQLRewriteConte
     @Override
     public void decorate(final ShardingRule shardingRule, final ConfigurationProperties properties, final SQLRewriteContext sqlRewriteContext) {
         //ParameterRewriter中与分片相关的实现有两种。
-        //ShardingGeneratedKeyInsertValueParameterRewriter负责主键参数重写
-        //ShardingPaginationParameterRewriter负责分页参数重写
+        //ShardingGeneratedKeyInsertValueParameterRewriter负责insert语句,主键参数重写
+        //ShardingPaginationParameterRewriter负责select语句,分页参数重写
         for (ParameterRewriter each : new ShardingParameterRewriterBuilder(shardingRule, routeContext).getParameterRewriters(sqlRewriteContext.getSchemaMetaData())) {
             if (!sqlRewriteContext.getParameters().isEmpty() && each.isNeedRewrite(sqlRewriteContext.getSqlStatementContext())) {
                 //参数重写

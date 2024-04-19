@@ -51,11 +51,13 @@ public final class ShardingComplexRoutingEngine implements ShardingRouteEngine {
     @Override
     public RouteResult route(final ShardingRule shardingRule) {
         Collection<RouteResult> result = new ArrayList<>(logicTables.size());
+        //记录下面处理过绑定表名
         Collection<String> bindingTableNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (String each : logicTables) {
             Optional<TableRule> tableRule = shardingRule.findTableRule(each);
             if (tableRule.isPresent()) {
                 if (!bindingTableNames.contains(each)) {
+                    //执行路由
                     result.add(new ShardingStandardRoutingEngine(tableRule.get().getLogicTable(), sqlStatementContext, shardingConditions, properties).route(shardingRule));
                 }
                 shardingRule.findBindingTableRule(each).ifPresent(bindingTableRule -> bindingTableNames.addAll(

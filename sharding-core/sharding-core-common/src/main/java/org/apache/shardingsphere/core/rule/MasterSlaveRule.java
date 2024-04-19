@@ -46,6 +46,8 @@ public class MasterSlaveRule implements BaseRule {
         this.name = name;
         this.masterDataSourceName = masterDataSourceName;
         this.slaveDataSourceNames = slaveDataSourceNames;
+        //loadFirstTypeBasedService方法返回SPI多个中顺序第一个
+        //即org.apache.shardingsphere.spi.masterslave.MasterSlaveLoadBalanceAlgorithm文件第一个轮询算法
         this.loadBalanceAlgorithm = null == loadBalanceAlgorithm ? new MasterSlaveLoadBalanceAlgorithmServiceLoader().newService() : loadBalanceAlgorithm;
         ruleConfiguration = new MasterSlaveRuleConfiguration(name, masterDataSourceName, slaveDataSourceNames, 
                 new LoadBalanceStrategyConfiguration(this.loadBalanceAlgorithm.getType(), this.loadBalanceAlgorithm.getProperties()));

@@ -83,11 +83,11 @@ public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule
     private ShardingConditions getShardingConditions(final List<Object> parameters, 
                                                      final SQLStatementContext sqlStatementContext, final SchemaMetaData schemaMetaData, final ShardingRule shardingRule) {
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement) {
-            //查询分片
+            //新增分片
             if (sqlStatementContext instanceof InsertStatementContext) {
                 return new ShardingConditions(new InsertClauseShardingConditionEngine(shardingRule).createShardingConditions((InsertStatementContext) sqlStatementContext, parameters));
             }
-            //增删改分片
+            //删改查分片
             return new ShardingConditions(new WhereClauseShardingConditionEngine(shardingRule, schemaMetaData).createShardingConditions(sqlStatementContext, parameters));
         }
         return new ShardingConditions(Collections.emptyList());

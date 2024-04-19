@@ -66,6 +66,7 @@ import java.util.Map;
 /**
  * Spring boot starter configuration.
  */
+//spring.factories加载配置
 @Configuration
 @ComponentScan("org.apache.shardingsphere.spring.boot.converter")
 @EnableConfigurationProperties({
@@ -73,7 +74,9 @@ import java.util.Map;
         SpringBootMasterSlaveRuleConfigurationProperties.class, SpringBootEncryptRuleConfigurationProperties.class,
         SpringBootPropertiesConfigurationProperties.class, SpringBootShadowRuleConfigurationProperties.class})
 @ConditionalOnProperty(prefix = "spring.shardingsphere", name = "enabled", havingValue = "true", matchIfMissing = true)
+//定义加载顺序,必须依赖数据源
 @AutoConfigureBefore(DataSourceAutoConfiguration.class)
+//构造器注入属性
 @RequiredArgsConstructor
 public class SpringBootConfiguration implements EnvironmentAware {
     
@@ -152,6 +155,8 @@ public class SpringBootConfiguration implements EnvironmentAware {
     @Override
     public final void setEnvironment(final Environment environment) {
         String prefix = "spring.shardingsphere.datasource.";
+        //spring.shardingsphere.datasource.names=ds0,ds1
+        //getDataSourceNames多数据源拆分配置
         for (String each : getDataSourceNames(environment, prefix)) {
             try {
                 dataSourceMap.put(each, getDataSource(environment, prefix, each));
@@ -172,11 +177,13 @@ public class SpringBootConfiguration implements EnvironmentAware {
     
     @SuppressWarnings("unchecked")
     private DataSource getDataSource(final Environment environment, final String prefix, final String dataSourceName) throws ReflectiveOperationException, NamingException {
+        //SpringBoot v2版本数据源配置绑定
         Map<String, Object> dataSourceProps = PropertyUtil.handle(environment, prefix + dataSourceName.trim(), Map.class);
         Preconditions.checkState(!dataSourceProps.isEmpty(), "Wrong datasource properties!");
         if (dataSourceProps.containsKey(jndiName)) {
             return getJndiDataSource(dataSourceProps.get(jndiName).toString());
         }
+        //spring.shardingsphere.datasource.ds0.type=com.alibaba.druid.pool.DruidDataSource
         DataSource result = DataSourceUtil.getDataSource(dataSourceProps.get("type").toString(), dataSourceProps);
         DataSourcePropertiesSetterHolder.getDataSourcePropertiesSetterByType(dataSourceProps.get("type").toString()).ifPresent(
             dataSourcePropertiesSetter -> dataSourcePropertiesSetter.propertiesSet(environment, prefix, dataSourceName, result));

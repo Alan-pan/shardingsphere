@@ -42,9 +42,12 @@ public abstract class AbstractSQLBuilder implements SQLBuilder {
         }
         Collections.sort(context.getSqlTokens());
         StringBuilder result = new StringBuilder();
+        //截取第一个SQLToken之前的内容  select * from
         result.append(context.getSql().substring(0, context.getSqlTokens().get(0).getStartIndex()));
         for (SQLToken each : context.getSqlTokens()) {
+            //重写拼接每个SQLToken对应的内容  t_order ->t_order_0
             result.append(getSQLTokenText(each));
+            //拼接SQLToken中间不变的内容 where created_by = '123'
             result.append(getConjunctionText(each));
         }
         return result.toString();

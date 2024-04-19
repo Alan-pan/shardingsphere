@@ -78,14 +78,21 @@ public final class SQLParserEngine {
         }
         //根据数据库类型和sql生成解析树
         ParseTree parseTree = new SQLParserExecutor(databaseTypeName, sql).execute().getRootNode();
-        //ParseTreeVisitor的visit方法对解析树进行处理得到SQLStatement
-        //goto SelectStatement SQLStatement还会被进一步转换成SQLStatementContext
-        //visit方法调用MySQLStatementParser.accept
-        //继续调用为MySQLDMLVisitor#visitSelectClause
+        //SQL=SELECT * FROM t_order_item WHERE item_id IS NOT NULL AND item_id NOT BETWEEN 100000 AND 100001 ORDER BY item_id
+        //ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass()))得到MySQLDMLVisitor
+        //parseTree=org.apache.shardingsphere.sql.parser.autogen.MySQLStatementParser.SelectContext
+
+        //SelectContext#accept
         //public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-        //    if ( visitor instanceof MySQLStatementVisitor ) return ((MySQLStatementVisitor<? extends T>)visitor).visitSelectClause(this);
-        //    else return visitor.visitChildren(this);
-        //}
+        //			if ( visitor instanceof MySQLStatementVisitor ) return ((MySQLStatementVisitor<? extends T>)visitor).visitSelect(this);
+        //			else return visitor.visitChildren(this);
+        //		}
+
+        //执行MySQLDMLVisitor#visitSelect
+        //执行MySQLDMLVisitor.visitUnionClause
+        //执行...
+        //不停向下调用各个解析类的accept然后再去调用
+        //MySQLDMLVisitor.visitSelect/visitUnionClause/visitSelectClause
         SQLStatement result = (SQLStatement) ParseTreeVisitorFactory.newInstance(databaseTypeName, VisitorRule.valueOf(parseTree.getClass())).visit(parseTree);
         if (useCache) {
             cache.put(sql, result);

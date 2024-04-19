@@ -86,7 +86,8 @@ public final class ShardingSQLRewriterParameterizedTest extends AbstractSQLRewri
         shardingSQLRewriteContextDecorator.setRouteContext(routeContext);
         shardingSQLRewriteContextDecorator.decorate(shardingRule, properties, sqlRewriteContext);
         sqlRewriteContext.generateSQLTokens();
-        return new SQLRouteRewriteEngine().rewrite(sqlRewriteContext, routeContext.getRouteResult()).values();
+        Collection<SQLRewriteResult> values = new SQLRouteRewriteEngine().rewrite(sqlRewriteContext, routeContext.getRouteResult()).values();
+        return values;
     }
     
     private YamlRootShardingConfiguration createRuleConfiguration() throws IOException {

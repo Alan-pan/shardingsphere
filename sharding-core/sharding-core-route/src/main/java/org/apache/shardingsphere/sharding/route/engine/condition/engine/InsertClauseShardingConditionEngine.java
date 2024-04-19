@@ -59,13 +59,15 @@ public final class InsertClauseShardingConditionEngine {
      */
     public List<ShardingCondition> createShardingConditions(final InsertStatementContext insertStatementContext, final List<Object> parameters) {
         List<ShardingCondition> result = new LinkedList<>();
+        //获取SQL解析中的table名
         String tableName = insertStatementContext.getSqlStatement().getTable().getTableName().getIdentifier().getValue();
+        //如果insert条件有有自动生成key,则移除key列
         Collection<String> columnNames = getColumnNames(insertStatementContext);
-        //生成分片条件
+        //获取分片条件= or,返回ShardingCondition
         for (InsertValueContext each : insertStatementContext.getInsertValueContexts()) {
             result.add(createShardingCondition(tableName, columnNames.iterator(), each, parameters));
         }
-        //生成自动生成key
+        //自动生成key
         Optional<GeneratedKeyContext> generatedKey = insertStatementContext.getGeneratedKeyContext();
         if (generatedKey.isPresent() && generatedKey.get().isGenerated()) {
             generatedKey.get().getGeneratedValues().addAll(getGeneratedKeys(tableName, insertStatementContext.getSqlStatement().getValueListCount()));
@@ -91,11 +93,15 @@ public final class InsertClauseShardingConditionEngine {
         SPITimeService timeService = new SPITimeService();
         for (ExpressionSegment each : insertValueContext.getValueExpressions()) {
             String columnName = columnNames.next();
+            //判断是定义的分片列表以及分片列
             if (shardingRule.isShardingColumn(columnName, tableName)) {
+                //如果是= in条件
                 if (each instanceof SimpleExpressionSegment) {
                     result.getRouteValues().add(new ListRouteValue<>(columnName, tableName, Collections.singletonList(getRouteValue((SimpleExpressionSegment) each, parameters))));
+                //如果是now()条件
                 } else if (ExpressionConditionUtils.isNowExpression(each)) {
                     result.getRouteValues().add(new ListRouteValue<>(columnName, tableName, Collections.singletonList(timeService.getTime())));
+                //如果分片列为空,抛出异常
                 } else if (ExpressionConditionUtils.isNullExpression(each)) {
                     throw new ShardingSphereException("Insert clause sharding column can't be null.");
                 }

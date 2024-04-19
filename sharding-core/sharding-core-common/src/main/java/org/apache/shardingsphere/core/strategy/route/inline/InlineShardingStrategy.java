@@ -59,7 +59,7 @@ public final class InlineShardingStrategy implements ShardingStrategy {
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ConfigurationProperties properties) {
         RouteValue shardingValue = shardingValues.iterator().next();
         //ALLOW_RANGE_QUERY_WITH_INLINE_SHARDING设置为true，支持行表达式范围查询RangeRouteValue
-        // 直接返回所有availableTargetNames物理表，而不是根据RangeRouteValue计算
+        //直接返回所有availableTargetNames物理表，而不是根据RangeRouteValue计算
         if (properties.<Boolean>getValue(ConfigurationPropertyKey.ALLOW_RANGE_QUERY_WITH_INLINE_SHARDING) && shardingValue instanceof RangeRouteValue) {
             return availableTargetNames;
         }

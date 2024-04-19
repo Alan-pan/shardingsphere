@@ -189,9 +189,11 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     }
     
     private Collection<DataNode> route0(final ShardingRule shardingRule, final TableRule tableRule, final List<RouteValue> databaseShardingValues, final List<RouteValue> tableShardingValues) {
+        //获取路由数据库
         Collection<String> routedDataSources = routeDataSources(shardingRule, tableRule, databaseShardingValues);
         Collection<DataNode> result = new LinkedList<>();
         for (String each : routedDataSources) {
+            //获取路由表
             result.addAll(routeTables(shardingRule, tableRule, each, tableShardingValues));
         }
         return result;

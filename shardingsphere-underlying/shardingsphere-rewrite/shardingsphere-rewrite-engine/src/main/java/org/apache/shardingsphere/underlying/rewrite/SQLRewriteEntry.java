@@ -80,6 +80,7 @@ public final class SQLRewriteEntry {
             if (decorator instanceof RouteContextAware) {
                 ((RouteContextAware) decorator).setRouteContext(routeContext);
             }
+            //ShardingSQLRewriteContextDecorator#decorate执行重写
             decorator.decorate(rule, properties, sqlRewriteContext);
         }
     }

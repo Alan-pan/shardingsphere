@@ -160,6 +160,7 @@ public abstract class BasePrepareEngine {
     
     private Collection<ExecutionUnit> rewrite(final RouteContext routeContext, final SQLRewriteContext sqlRewriteContext) {
         Collection<ExecutionUnit> result = new LinkedHashSet<>();
+        //创建完SQLRewriteContext后就对整条SQL进行重写和组装参数，可以看出每个RouteUnit都会重写SQL并获取自己对应的参数。
         for (Entry<RouteUnit, SQLRewriteResult> entry : new SQLRouteRewriteEngine().rewrite(sqlRewriteContext, routeContext.getRouteResult()).entrySet()) {
             result.add(new ExecutionUnit(entry.getKey().getDataSourceMapper().getActualName(), new SQLUnit(entry.getValue().getSql(), entry.getValue().getParameters())));
         }

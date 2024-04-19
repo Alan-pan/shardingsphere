@@ -97,6 +97,7 @@ public final class DataNodeRouter {
         //解析引擎解析SQL
         SQLStatement sqlStatement = parserEngine.parse(sql, useCache);
         try {
+            //组装生成SQLStatementContext
             SQLStatementContext sqlStatementContext = SQLStatementContextFactory.newInstance(metaData.getSchema(), sql, parameters, sqlStatement);
             return new RouteContext(sqlStatementContext, parameters, new RouteResult());
             // TODO should pass parameters for master-slave
