@@ -72,7 +72,10 @@ public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule
             mergeShardingConditions(shardingConditions);
         }
         ShardingRouteEngine shardingRouteEngine = ShardingRouteEngineFactory.newInstance(shardingRule, metaData, sqlStatementContext, shardingConditions, properties);
-        ///得到路由结果
+        //通过分片条件计算实际执行的库,表,得到路由结果,默认调用
+        //ShardingStandardRoutingEngine#route
+        //ShardingStandardRoutingEngine#getDataNodes
+        //ShardingStandardRoutingEngine#routeByShardingConditions
         RouteResult routeResult = shardingRouteEngine.route(shardingRule);
         if (needMergeShardingValues) {
             Preconditions.checkState(1 == routeResult.getRouteUnits().size(), "Must have one sharding with subquery.");
