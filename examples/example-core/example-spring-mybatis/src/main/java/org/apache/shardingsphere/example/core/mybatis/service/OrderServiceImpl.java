@@ -18,12 +18,14 @@
 package org.apache.shardingsphere.example.core.mybatis.service;
 
 import org.apache.shardingsphere.example.core.api.entity.Address;
+import org.apache.shardingsphere.example.core.api.entity.App;
 import org.apache.shardingsphere.example.core.api.entity.Order;
 import org.apache.shardingsphere.example.core.api.entity.OrderItem;
 import org.apache.shardingsphere.example.core.api.repository.AddressRepository;
 import org.apache.shardingsphere.example.core.api.repository.OrderItemRepository;
 import org.apache.shardingsphere.example.core.api.repository.OrderRepository;
 import org.apache.shardingsphere.example.core.api.service.ExampleService;
+import org.apache.shardingsphere.example.core.mybatis.repository.AppMapper;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,13 +48,25 @@ public class OrderServiceImpl implements ExampleService {
     @Resource
     private AddressRepository addressRepository;
 
+    @Resource
+    private AppMapper appMapper;
+
     @Override
     public void initEnvironment() throws SQLException {
-        orderRepository.createTableIfNotExists();
-        orderItemRepository.createTableIfNotExists();
-        orderRepository.truncateTable();
-        orderItemRepository.truncateTable();
-        initAddressTable();
+//      测试insertbyselect
+//        t_app广播表
+        appMapper.createTableIfNotExists();
+//        appMapper.selectAll();
+//        appMapper.insert(new App("1","1"));
+
+        appMapper.insertBySelect("1");
+//        appMapper.dropTable();
+
+//        orderRepository.createTableIfNotExists();
+//        orderItemRepository.createTableIfNotExists();
+//        orderRepository.truncateTable();
+//        orderItemRepository.truncateTable();
+//        initAddressTable();
     }
     
     private void initAddressTable() throws SQLException {
