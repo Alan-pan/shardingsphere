@@ -88,7 +88,7 @@ public final class DataNodeRouter {
     @SuppressWarnings("unchecked")
     private RouteContext executeRoute(final String sql, final List<Object> parameters, final boolean useCache) {
         RouteContext result = createRouteContext(sql, parameters, useCache);
-        //如果配置主从,decorators.entrySet包含ShardingRouteDecorator+n个MasterSlaveRouteDecorator
+        //如果配置主从,decorators.entrySet包含ShardingRouteDecorator+N个MasterSlaveRouteDecorator
         for (Entry<BaseRule, RouteDecorator> entry : decorators.entrySet()) {
             result = entry.getValue().decorate(result, metaData, entry.getKey(), properties);
         }

@@ -54,13 +54,26 @@ public class OrderServiceImpl implements ExampleService {
     @Override
     public void initEnvironment() throws SQLException {
 //      测试insertbyselect
+//        4.1 跳过Sharding语法限制
 //        t_app广播表
-        appMapper.createTableIfNotExists();
+//        appMapper.createTableIfNotExists();
 //        appMapper.selectAll();
 //        appMapper.insert(new App("1","1"));
 
-        appMapper.insertBySelect("1");
+//        4.2 强制路由主库,由于只配置了分表,没有配置分库,所以路由结果是两个库的从库
+//[INFO ] 2024-04-22 17:00:07,611 --main-- [ShardingSphere-SQL] Actual SQL: ds_master_0_slave_0 ::: SELECT * FROM t_app_0 WHERE app_code = ?; ::: [2]
+//[INFO ] 2024-04-22 17:00:07,611 --main-- [ShardingSphere-SQL] Actual SQL: ds_master_1_slave_0 ::: SELECT * FROM t_app_0 WHERE app_code = ?; ::: [2]
+//=>
+//        配置
+//        spring.shardingsphere.props.master.route.only=true
+//[INFO ] 2024-04-22 17:05:55,060 --main-- [ShardingSphere-SQL] Actual SQL: ds_master_0 ::: SELECT * FROM t_app_0 WHERE app_code = ?; ::: [2]
+//[INFO ] 2024-04-22 17:05:55,060 --main-- [ShardingSphere-SQL] Actual SQL: ds_master_1 ::: SELECT * FROM t_app_0 WHERE app_code = ?; ::: [2]
+        appMapper.select(2);
 //        appMapper.dropTable();
+
+//        4.2 强制路由主库
+//        t_app配置主从库+配置开启主库路由配置项ConfigurationPropertyKey.java=>master.route.only
+//        appMapper.selectAll();
 
 //        orderRepository.createTableIfNotExists();
 //        orderItemRepository.createTableIfNotExists();

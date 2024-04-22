@@ -20,7 +20,9 @@ package org.apache.shardingsphere.masterslave.route.engine.impl;
 import lombok.RequiredArgsConstructor;
 import org.apache.shardingsphere.api.hint.HintManager;
 import org.apache.shardingsphere.core.rule.MasterSlaveRule;
+import org.apache.shardingsphere.sql.parser.RuleContextManager;
 import org.apache.shardingsphere.sql.parser.sql.statement.SQLStatement;
+import org.apache.shardingsphere.sql.parser.sql.statement.SkipShardingStatement;
 import org.apache.shardingsphere.sql.parser.sql.statement.dml.SelectStatement;
 
 import java.util.ArrayList;
@@ -55,6 +57,11 @@ MasterSlaveDataSourceRouter {
     }
     
     private boolean isMasterRoute(final SQLStatement sqlStatement) {
+        //4.2 强制路由主库
+        if(sqlStatement instanceof SkipShardingStatement){
+            // 优先以MasterVisitedManager中的值为准
+            return MasterVisitedManager.isMasterVisited() || RuleContextManager.isMasterRoute();
+        }
         //如果 SQL 语句包含锁（例如 SELECT ... FOR UPDATE），则判定为主库路由。
         //如果 SQL 语句不是 SELECT 类型的语句，则判定为主库路由。
         //如果主库已经访问过（可能是之前的操作已经在主库上执行过了），则判定为主库路由。
@@ -65,4 +72,5 @@ MasterSlaveDataSourceRouter {
     private boolean containsLockSegment(final SQLStatement sqlStatement) {
         return sqlStatement instanceof SelectStatement && ((SelectStatement) sqlStatement).getLock().isPresent();
     }
+
 }

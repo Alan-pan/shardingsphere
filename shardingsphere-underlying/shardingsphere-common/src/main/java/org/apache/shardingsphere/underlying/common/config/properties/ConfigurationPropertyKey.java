@@ -135,8 +135,10 @@ public enum ConfigurationPropertyKey implements TypedPropertyKey {
     
     PROXY_BACKEND_CONNECTION_TIMEOUT_SECONDS("proxy.backend.connection.timeout.seconds", String.valueOf(60), int.class),
     
-    CHECK_TABLE_METADATA_ENABLED("check.table.metadata.enabled", String.valueOf(Boolean.FALSE), boolean.class);
-    
+    CHECK_TABLE_METADATA_ENABLED("check.table.metadata.enabled", String.valueOf(Boolean.FALSE), boolean.class),
+    //4.2 强制路由主库
+    MASTER_ROUTE_ONLY("master.route.only", String.valueOf(Boolean.FALSE), boolean.class);
+
     private final String key;
     
     private final String defaultValue;

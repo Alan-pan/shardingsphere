@@ -128,9 +128,11 @@ public final class ShardingRouteEngineFactory {
     private static ShardingRouteEngine getShardingRoutingEngine(final ShardingRule shardingRule, final SQLStatementContext sqlStatementContext,
                                                                 final ShardingConditions shardingConditions, final Collection<String> tableNames, final ConfigurationProperties properties) {
         Collection<String> shardingTableNames = shardingRule.getShardingLogicTableNames(tableNames);
+        //如果仅有一个分片表查询//分片表是相同分片配置绑定关系
         if (1 == shardingTableNames.size() || shardingRule.isAllBindingTables(shardingTableNames)) {
             return new ShardingStandardRoutingEngine(shardingTableNames.iterator().next(), sqlStatementContext, shardingConditions, properties);
         }
+        //多个分片表,其中有分片表不是相同分片绑定,spring.shardingsphere.sharding.binding-tables
         // TODO config for cartesian set
         return new ShardingComplexRoutingEngine(tableNames, sqlStatementContext, shardingConditions, properties);
     }
