@@ -12,4 +12,6 @@ import org.apache.shardingsphere.example.core.api.repository.CommonRepository;
 @Mapper
 public interface AppMapper extends CommonRepository<App,Long> {
     void insertBySelect(String appCode);
+
+    App select(Integer appCode);
 }

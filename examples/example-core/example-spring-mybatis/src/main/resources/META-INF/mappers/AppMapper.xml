@@ -48,10 +48,14 @@
     </insert>
 
     <delete id="delete">
-        DELETE FROM t_app WHERE user_id = #{userId,jdbcType=INTEGER};
+        DELETE FROM t_app WHERE app_code = #{appCode,jdbcType=VARCHAR};
     </delete>
 
     <select id="selectAll" resultMap="baseResultMap">
-        SELECT * FROM t_app;
+        SELECT * FROM t_app
+    </select>
+
+    <select id="select" resultType="org.apache.shardingsphere.example.core.api.entity.App">
+        SELECT * FROM t_app WHERE app_code = #{appCode,jdbcType=VARCHAR};
     </select>
 </mapper>
