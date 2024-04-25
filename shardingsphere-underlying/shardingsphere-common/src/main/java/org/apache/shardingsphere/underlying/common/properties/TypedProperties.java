@@ -18,7 +18,9 @@
 package org.apache.shardingsphere.underlying.common.properties;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.underlying.common.config.exception.ShardingSphereConfigurationException;
 
 import java.util.Collection;
@@ -30,6 +32,7 @@ import java.util.Properties;
 /**
  * Typed properties with a specified enum.
  */
+@Slf4j
 public abstract class TypedProperties<E extends Enum & TypedPropertyKey> {
     
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
@@ -74,4 +77,38 @@ public abstract class TypedProperties<E extends Enum & TypedPropertyKey> {
     public <T> T getValue(final E key) {
         return (T) cache.get(key).getValue();
     }
+
+    //4.3 配置动态生效
+    /**
+     * vivo定制改造方法 refresh property value.
+     * @param key property key
+     * @param value property value
+     * @return 更新配置是否成功
+     */
+    public boolean refreshValue(final Class<E> keyClass,String key, String value){
+        //获取配置类支持的配置项
+        E[] enumConstants = keyClass.getEnumConstants();
+        for (E each : enumConstants) {
+            //遍历新的值
+            if(each.getKey().equals(key)){
+                try {
+                    //空白value认为无效,取默认值
+                    if(Strings.isNullOrEmpty(value)){
+                        value = each.getDefaultValue();
+                    }
+                    //构造新属性
+                    TypedPropertyValue typedPropertyValue = new TypedPropertyValue(each, value);
+                    //替换缓存
+                    cache.put(each, typedPropertyValue);
+                    //原始属性也替换下,有可能会通过RuntimeContext直接获取Properties
+                    props.put(key,value);
+                    return true;
+                } catch (final TypedPropertyValueException ex) {
+                    log.error("refreshValue error. key={} , value={}", key, value, ex);
+                }
+            }
+        }
+        return false;
+    }
+
 }

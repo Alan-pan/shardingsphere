@@ -103,6 +103,7 @@ public class SpringBootConfiguration implements EnvironmentAware {
     @Bean
     @Conditional(ShardingRuleCondition.class)
     public DataSource shardingDataSource() throws SQLException {
+        //加载数据源创建ShardingDataSource,ShardingRuntimeContext...
         return ShardingDataSourceFactory.createDataSource(dataSourceMap, new ShardingRuleConfigurationYamlSwapper().swap(shardingRule), props.getProps());
     }
     
@@ -155,6 +156,12 @@ public class SpringBootConfiguration implements EnvironmentAware {
     @Override
     public final void setEnvironment(final Environment environment) {
         String prefix = "spring.shardingsphere.datasource.";
+        //additional-spring-configuration-metadata.json配置
+        //{
+        //      "name": "spring.shardingsphere.datasource.names",
+        //      "type": "java.lang.String",
+        //      "sourceType": "org.apache.shardingsphere.shardingjdbc.spring.boot.SpringBootConfiguration"
+        //    },
         //spring.shardingsphere.datasource.names=ds0,ds1
         //getDataSourceNames多数据源拆分配置
         for (String each : getDataSourceNames(environment, prefix)) {
@@ -177,7 +184,7 @@ public class SpringBootConfiguration implements EnvironmentAware {
     
     @SuppressWarnings("unchecked")
     private DataSource getDataSource(final Environment environment, final String prefix, final String dataSourceName) throws ReflectiveOperationException, NamingException {
-        //SpringBoot v2版本数据源配置绑定
+        //SpringBoot v1版本数据源配置绑定,获取单个dsName对应的数据源配置map
         Map<String, Object> dataSourceProps = PropertyUtil.handle(environment, prefix + dataSourceName.trim(), Map.class);
         Preconditions.checkState(!dataSourceProps.isEmpty(), "Wrong datasource properties!");
         if (dataSourceProps.containsKey(jndiName)) {
