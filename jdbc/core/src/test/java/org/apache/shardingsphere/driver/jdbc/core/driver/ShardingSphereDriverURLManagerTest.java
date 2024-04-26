@@ -20,6 +20,7 @@ package org.apache.shardingsphere.driver.jdbc.core.driver;
 import com.ctrip.framework.apollo.ConfigFile;
 import com.ctrip.framework.apollo.ConfigService;
 import com.ctrip.framework.apollo.core.enums.ConfigFileFormat;
+import org.apache.shardingsphere.driver.ShardingSphereDriver;
 import org.apache.shardingsphere.driver.jdbc.exception.syntax.DriverURLProviderNotFoundException;
 import org.apache.shardingsphere.test.mock.AutoMockExtension;
 import org.apache.shardingsphere.test.mock.StaticMockSettings;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -70,4 +72,20 @@ public final class ShardingSphereDriverURLManagerTest {
         byte[] content = ShardingSphereDriverURLManager.getContent(url);
         assertThat("config content".getBytes(StandardCharsets.UTF_8), is(content));
     }
+
+    @Test
+    public void assertToNacosConfigurationFile() {
+//        ConfigFile configFile = mock(ConfigFile.class);
+//        when(configFile.getContent()).thenReturn("config content");
+//        when(ConfigService.getConfigFile(anyString(), any(ConfigFileFormat.class))).thenReturn(configFile);
+//        String url = "jdbc:shardingsphere:nacos:namespace";
+//        byte[] content = ShardingSphereDriverURLManager.getContent(url);
+        ShardingSphereDriver shardingSphereDriver = new ShardingSphereDriver();
+        try {
+            shardingSphereDriver.connect("jdbc:shardingsphere:nacos:namespace",null);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
